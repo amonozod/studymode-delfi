@@ -3,32 +3,27 @@ const cors = require('cors');
 const https = require('https');
 
 const app = express();
-app.use(cors({
-  origin: '*',
-  methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type']
-}));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
-
-const SYSTEM_PROMPT = 'You are Delfi, a friendly AI tutor for StudyMode, helping students prepare for IELTS and SAT. Answer questions clearly and concisely.';
 
 app.post('/api/delfi', (req, res) => {
   const { messages } = req.body;
   const body = JSON.stringify({
-    model: 'claude-haiku-4-5-20251001',
+    model: 'llama-3.1-8b-instant',
     max_tokens: 600,
-    system: SYSTEM_PROMPT,
-    messages: messages
+    messages: [
+      { role: 'system', content: 'You are Delfi, a friendly AI tutor for StudyMode, helping students prepare for IELTS and SAT. Answer questions clearly and concisely.' },
+      ...messages
+    ]
   });
 
   const options = {
-    hostname: 'api.anthropic.com',
-    path: '/v1/messages',
+    hostname: 'api.groq.com',
+    path: '/openai/v1/chat/completions',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
+      'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
       'Content-Length': Buffer.byteLength(body)
     }
   };
@@ -39,7 +34,7 @@ app.post('/api/delfi', (req, res) => {
     apiRes.on('end', () => {
       try {
         const parsed = JSON.parse(data);
-        res.json({ reply: parsed.content[0].text });
+        res.json({ reply: parsed.choices[0].message.content });
       } catch(e) {
         res.status(500).json({ error: 'Parse error' });
       }
