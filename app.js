@@ -3,7 +3,11 @@ const cors = require('cors');
 const https = require('https');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['POST', 'GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
 
 const SYSTEM_PROMPT = 'You are Delfi, a friendly AI tutor for StudyMode, helping students prepare for IELTS and SAT. Answer questions clearly and concisely.';
